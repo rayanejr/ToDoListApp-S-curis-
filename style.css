@@ -1,0 +1,145 @@
+/* Réinitialisation de base et paramètres globaux */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    font-family: 'Courier New', Courier, monospace;
+    background: #121212; /* Fond sombre pour l'esthétique cyber */
+    color: #00FF00; /* Texte en vert style terminal pour le contraste */
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+    overflow: hidden;
+}
+
+/* Barre de navigation */
+nav.cyber-theme {
+    background-color: #000; /* Fond noir */
+    color: #00FF00;
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+nav.cyber-theme div {
+    width: 90%;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav.cyber-theme a {
+    color: #00FF00;
+    text-decoration: none;
+    margin: 0 20px;
+    font-weight: bold;
+    transition: color 0.3s ease-in-out;
+}
+
+nav.cyber-theme a:hover, nav.cyber-theme a.active {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+/* Boutons et liens */
+.btn, a, input[type="submit"] {
+    background-color: #005000; /* Vert foncé */
+    color: #00FF00;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.btn:hover, a:hover, input[type="submit"]:hover {
+    background-color: #007500; /* Vert un peu plus clair */
+    color: #FFFFFF;
+}
+
+/* Formulaires et inputs */
+form {
+    background-color: #222;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+input[type="text"], input[type="password"], input[type="email"], select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background: #000;
+    border: 1px solid #00FF00;
+    border-radius: 5px;
+    color: #00FF00;
+}
+
+/* Mise en page et texte */
+h1, h2, h3, p {
+    margin-bottom: 20px;
+}
+
+h1, h2, h3 {
+    color: #00FF00;
+}
+
+p {
+    font-size: 1.1rem;
+}
+
+/* Tableaux et données */
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 15px;
+    border: 1px solid #00FF00;
+    text-align: left;
+}
+
+th {
+    background-color: #003300;
+}
+
+tr:nth-child(even) {
+    background-color: #001500;
+}
+
+input[type="submit"] {
+    background-color: #005000; 
+    color: #00FF00; 
+    padding: 10px 20px; 
+    border: 2px solid #00FF00; 
+    border-radius: 5px; 
+    font-size: 1rem; 
+    transition: background-color 0.3s, color 0.3s; /* Animation douce lors du survol */
+    cursor: pointer; /* Change le curseur en main pour indiquer qu'il s'agit d'un bouton cliquable */
+    display: inline-block; /* Assure que les marges fonctionnent correctement */
+    margin: 5px 0; /* Espacement autour du bouton */
+}
+
+input[type="submit"]:hover {
+    background-color: #007500; /* Vert un peu plus clair lors du survol */
+    color: #FFFFFF; /* Texte en blanc pour le contraste */
+}
+
+/* Vous pouvez ajouter des styles supplémentaires pour des boutons avec des valeurs ou noms spécifiques si nécessaire */
+input[type="submit"][name="bouton"][value="S'inscrire"],
+input[type="submit"][name="bouton"][value="Valider"] {
+    width: auto; /* Ou une largeur spécifique, si vous le souhaitez */
+    /* D'autres styles spécifiques ici si nécessaire */
+}

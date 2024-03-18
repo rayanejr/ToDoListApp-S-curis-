@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PHP Service
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php_web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: bd
+      DB_USERNAME: user
+      DB_PASSWORD: password
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+
+  # MySQL Service
+  db:
+    image: mysql:8.0
+    container_name: php_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: bd
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "33060:3306"  # Change this if you want to access MySQL from the host machine
+
+  # phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: php_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: user
+      PMA_PASSWORD: password
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+    driver: local
