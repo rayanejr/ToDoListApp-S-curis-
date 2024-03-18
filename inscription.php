@@ -1,25 +1,44 @@
 <?php
+require 'functions.php';
 session_start();
 
 if (isset($_POST["bouton"])) {
-    $id = mysqli_connect("db", "user", "password", "bd");
-    mysqli_set_charset($id, "utf8");
+    $connection = safeConnect();
 
-    $nom = mysqli_real_escape_string($id, $_POST["nom"]);
-    $prenom = mysqli_real_escape_string($id, $_POST["prenom"]);
-    $mail = mysqli_real_escape_string($id, $_POST["mail"]);
-    $pseudo = mysqli_real_escape_string($id, $_POST["pseudo"]);
-    $mdp = mysqli_real_escape_string($id, $_POST["mdp"]); 
+    $nom = sanitizeInput($_POST["nom"], $connection);
+    $prenom = sanitizeInput($_POST["prenom"], $connection);
+    $mail = sanitizeInput($_POST["mail"], $connection);
+    $pseudo = sanitizeInput($_POST["pseudo"], $connection);
+    $mdp = password_hash($_POST["mdp"], PASSWORD_DEFAULT);
 
-    $target_dir = "uploads/";
-    $target_file = $target_dir . basename($_FILES["photo"]["name"]);
-    move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file);
+    if (!empty($_FILES["photo"]["name"])) {
+        $target_dir = "uploads/";
+        $target_file = $target_dir . basename($_FILES["photo"]["name"]);
+        $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+        $check = getimagesize($_FILES["photo"]["tmp_name"]);
+        if($check !== false && in_array($imageFileType, ['jpg', 'png', 'jpeg', 'gif'])) {
+            if (move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file)) {
+                $uploadSuccess = true;
+            } else {
+                echo "Erreur de téléchargement de la photo.";
+                $uploadSuccess = false;
+                exit;
+            }
+        } else {
+            echo "Le fichier n'est pas une image valide.";
+            exit;
+        }
+    } else {
+        $target_file = "";
+    }
 
     $req = "INSERT INTO users (nom, prenom, mail, pseudo, mdp, photo) 
             VALUES ('$nom', '$prenom', '$mail', '$pseudo', '$mdp', '$target_file')";
-    mysqli_query($id, $req);
-
-    header("location:index.php");
+    if(mysqli_query($connection, $req)) {
+        header("location:index.php");
+    } else {
+        echo "Erreur lors de l'inscription.";
+    }
 }
 ?>
 
@@ -44,7 +63,7 @@ if (isset($_POST["bouton"])) {
             <input type="submit" value="S'inscrire" name="bouton">
         </form>
         <br><br>
-        <p>Vous avez déja un compte? <a href="connexion.php">Connectez-vous ici</a>.</p>
+        <p>Vous avez déjà un compte? <a href="connexion.php">Connectez-vous ici</a>.</p>
     </div>
 </body>
 </html>

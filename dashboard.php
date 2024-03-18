@@ -1,16 +1,29 @@
 <?php
 session_start();
-$id = mysqli_connect("db", "user", "password", "bd");
+include 'functions.php';  // Assurez-vous que ce fichier contient les bonnes fonctions.
+
+$id = safeConnect();
 
 if (isset($_POST['creer_tache']) && isset($_SESSION['pseudo'])) {
-    $nom_tache = mysqli_real_escape_string($id, $_POST['nom_tache']);
-    $etat_tache = mysqli_real_escape_string($id, $_POST['etat_tache']);
-    $pseudo = mysqli_real_escape_string($id, $_SESSION['pseudo']);
+    $nom_tache = sanitizeInput($_POST['nom_tache'], $id);
+    $etat_tache = sanitizeInput($_POST['etat_tache'], $id);
+    $pseudo = sanitizeInput($_SESSION['pseudo'], $id);
 
-    $req_insert = "INSERT INTO tache (tache, etat, auteur) VALUES ('$nom_tache', '$etat_tache', '$pseudo')";
-    if (!mysqli_query($id, $req_insert)) {
-        echo '<p>Erreur lors de la création de la tâche.</p>';
-    }
+    $req_insert = "INSERT INTO tache (tache, etat, auteur) VALUES (?, ?, ?)";
+    $stmt = mysqli_prepare($id, $req_insert);
+    mysqli_stmt_bind_param($stmt, 'sss', $nom_tache, $etat_tache, $pseudo);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+}
+
+// Requête pour afficher toutes les tâches après une action (modifier, supprimer, etc.)
+if (isset($_SESSION['pseudo'])) {
+    $pseudo = sanitizeInput($_SESSION['pseudo'], $id);
+    $reqPrivate = "SELECT * FROM tache WHERE auteur = ?";
+    $stmt = mysqli_prepare($id, $reqPrivate);
+    mysqli_stmt_bind_param($stmt, 's', $pseudo);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 }
 
 $reqPublic = "SELECT * FROM tache";
@@ -43,19 +56,14 @@ $resPublic = mysqli_query($id, $reqPublic);
             </form>
 
             <h2>Vos Tâches</h2>
-            <?php
-            $pseudo = $_SESSION['pseudo'];
-            $reqPrivate = "SELECT * FROM tache WHERE auteur='$pseudo'";
-            $resPrivate = mysqli_query($id, $reqPrivate);
-            ?>
-
             <table>
                 <tr>
                     <th>Tâche</th>
                     <th>État</th>
                     <th>Actions</th>
                 </tr>
-                <?php while ($ligne = mysqli_fetch_assoc($resPrivate)): ?>
+                <?php 
+                while ($ligne = mysqli_fetch_assoc($result)): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($ligne['tache']); ?></td>
                     <td><?php echo htmlspecialchars($ligne['etat']); ?></td>
@@ -65,7 +73,9 @@ $resPublic = mysqli_query($id, $reqPublic);
                         <a href="supprimer_tache.php?idt=<?php echo $ligne['idt']; ?>">Supprimer</a>
                     </td>
                 </tr>
-                <?php endwhile; ?>
+                <?php endwhile; 
+                mysqli_stmt_close($stmt);
+                ?>
             </table>
         <?php endif; ?>
 

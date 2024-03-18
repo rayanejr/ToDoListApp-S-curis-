@@ -1,9 +1,12 @@
 <?php
-session_start();
-header("refresh:2;url=connexion.php");
+// Démarrage ou récupération de la session si elle n'est pas déjà démarrée
+if (session_status() === PHP_SESSION_NONE) {
+    session_start(); 
+}
+header("refresh:2;url=connexion.php"); // Redirige l'utilisateur vers la page de connexion après 2 secondes
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr"> <!-- Modification de la langue pour maintenir la cohérence -->
 <head>
     <meta charset="UTF-8">
     <title>Erreur</title>

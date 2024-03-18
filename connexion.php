@@ -1,19 +1,35 @@
 <?php
 session_start();
+include 'functions.php';
+
 if (isset($_POST["bouton"])) {
-    $id = mysqli_connect("db", "user", "password", "bd");
-    $pseudo = $_POST["pseudo"]; 
-    $mdp = $_POST["mdp"]; 
-    $req = "SELECT * FROM users WHERE pseudo='$pseudo' AND mdp='$mdp'";
-    $resultat = mysqli_query($id, $req);
-    if (mysqli_num_rows($resultat) > 0) {
-        $_SESSION["pseudo"] = $pseudo; 
-        header("location:dashboard.php");
+    $id = safeConnect();
+
+    $pseudo = sanitizeInput($_POST["pseudo"], $id);
+    $mdp = sanitizeInput($_POST["mdp"], $id);
+
+    $stmt = $id->prepare("SELECT * FROM users WHERE pseudo = ?");
+    $stmt->bind_param("s", $pseudo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        if (password_verify($mdp, $user['mdp'])) {
+            $_SESSION["pseudo"] = $user['pseudo']; 
+            header("location:dashboard.php");
+        } else {
+            $_SESSION['error'] = "Mot de passe incorrect.";
+            header("location:erreur.php");
+        }
     } else {
+        $_SESSION['error'] = "Utilisateur non trouvé.";
         header("location:erreur.php");
     }
+    $stmt->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>

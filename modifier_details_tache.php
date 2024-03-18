@@ -1,23 +1,28 @@
 <?php
+require 'functions.php';
 session_start();
 if (!isset($_SESSION['pseudo'])) {
     header('Location: connexion.php');
     exit();
 }
-$id = mysqli_connect("db", "user", "password", "bd");
+$connection = safeConnect();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    $idt = $_GET["idt"];
-    $nouvelleTache = $_POST["tache"]; 
-    $req = "UPDATE tache SET tache='$nouvelleTache' WHERE idt=$idt";
-    mysqli_query($id, $req);
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_GET["idt"])) {
+    $idt = sanitizeInput($_GET["idt"], $connection);
+    $nouvelleTache = sanitizeInput($_POST["tache"], $connection);
+    $req = "UPDATE tache SET tache = ? WHERE idt = ?";
+    $stmt = $connection->prepare($req);
+    $stmt->bind_param("si", $nouvelleTache, $idt);
+    $stmt->execute();
     header("Location: dashboard.php");
-} else {
-    $idt = $_GET["idt"]; 
-    $req = "SELECT tache FROM tache WHERE idt=$idt";
-    $result = mysqli_query($id, $req);
-    $tache = mysqli_fetch_assoc($result);
+} else if(isset($_GET["idt"])) {
+    $idt = sanitizeInput($_GET["idt"], $connection);
+    $req = "SELECT tache FROM tache WHERE idt = ?";
+    $stmt = $connection->prepare($req);
+    $stmt->bind_param("i", $idt);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $tache = $result->fetch_assoc();
 }
 ?>
 <!DOCTYPE html>
@@ -32,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div>
         <h1>Modifier la tâche</h1>
         <form action="" method="post">
-            <input type="text" name="tache" value="<?php echo htmlspecialchars($tache['tache']); ?>">
+            Tâche: <input type="text" name="tache" value="<?php echo htmlspecialchars($tache['tache'] ?? ''); ?>"><br>
             <input type="submit" value="Mettre à jour">
         </form>
     </div>
