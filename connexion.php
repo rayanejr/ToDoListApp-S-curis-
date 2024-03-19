@@ -2,6 +2,11 @@
 session_start();
 include 'functions.php';
 
+// Initialisation de $try
+if (!isset($_SESSION['try'])) {
+    $_SESSION['try'] = 0;
+}
+
 if (isset($_POST["bouton"])) {
     $id = safeConnect();
 
@@ -13,22 +18,35 @@ if (isset($_POST["bouton"])) {
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        if (password_verify($mdp, $user['mdp'])) {
-            $_SESSION["pseudo"] = $user['pseudo']; 
-            header("location:dashboard.php");
+    if ($_SESSION['try'] != 3) {
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            if (password_verify($mdp, $user['mdp'])) {
+                $_SESSION["pseudo"] = $user['pseudo']; 
+                header("location:dashboard.php");
+            } else {
+                $_SESSION['error'] = "Mot de passe incorrect.";
+                $_SESSION['try']++; 
+                header("location:erreur.php");
+            }
         } else {
-            $_SESSION['error'] = "Mot de passe incorrect.";
+            $_SESSION['error'] = "Utilisateur non trouvé.";
+            $_SESSION['try']++; 
             header("location:erreur.php");
         }
     } else {
-        $_SESSION['error'] = "Utilisateur non trouvé.";
-        header("location:erreur.php");
+        if ($_SESSION['time'] < time()) {
+            $_SESSION['time'] = time() + (15 * 60);
+            $_SESSION['try'] = 0; 
+        } else {
+            $_SESSION['error'] = "Trop de mauvaises tentatives, utilisateur bloqué";
+            header("location:blocage.php");
+        }
     }
     $stmt->close();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="fr">
