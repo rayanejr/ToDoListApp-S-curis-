@@ -22,7 +22,11 @@ Le but est de créer deux variantes de l'application : une version exposée aux 
 
 - **Version Sécurisée** :
   - Mise en œuvre de pratiques de sécurité robustes telles que la validation et le nettoyage des entrées, l'escapade des sorties pour prévenir le XSS, et la gestion sécurisée des sessions.
-  
+
+- **Setup des deux versions**:
+    - Modifications des informations de connexion à la bdd: dans le fichier fonctions.php pour la version sécurisé, dans chaque fichier pour la version vulnérable.
+    - Import de la base de données.
+      
 - **Scénarios d'Attaque et Évaluation** :
   - Simulation d'attaques visant les vulnérabilités dans la version vulnérable et documentation des résultats.
   - Tentatives d'attaques contre la version sécurisée pour évaluer l'efficacité des mesures de sécurité.
