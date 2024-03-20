@@ -1,97 +1,70 @@
 <?php
-require 'functions.php';
 session_start();
-if (!isset($_SESSION['pseudo'])) {
-    header('Location: connexion.php');
-    exit();
+include 'functions.php';
+
+// Initialisation de $try
+if (!isset($_SESSION['try'])) {
+    $_SESSION['try'] = 0;
 }
 
-$connection = safeConnect();
-$pseudo = $_SESSION['pseudo'];
-$message = '';
+if (isset($_POST["bouton"])) {
+    $id = safeConnect();
 
-$user = ['nom' => '', 'prenom' => '', 'mail' => '', 'photo' => ''];
+    $pseudo = sanitizeInput($_POST["pseudo"], $id);
+    $mdp = sanitizeInput($_POST["mdp"], $id);
 
-$stmt = $connection->prepare("SELECT nom, prenom, mail, photo FROM users WHERE pseudo=?");
-$stmt->bind_param("s", $pseudo);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($fetchedUser = $result->fetch_assoc()) {
-    $user = $fetchedUser;
-}
+    $stmt = $id->prepare("SELECT * FROM users WHERE pseudo = ?");
+    $stmt->bind_param("s", $pseudo);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nom = sanitizeInput($_POST['nom'], $connection);
-    $prenom = sanitizeInput($_POST['prenom'], $connection);
-    $mail = sanitizeInput($_POST['mail'], $connection);
-    $photoUpdate = '';
-
-    if (!empty($_FILES['photo']['name'])) {
-        $target_dir = "uploads/";
-        $target_file = $target_dir . basename($_FILES['photo']['name']);
-        $check = getimagesize($_FILES['photo']['tmp_name']);
-        if ($check !== false) {
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $target_file)) {
-                $photoUpdate = ", photo='$target_file'";
+    if ($_SESSION['try'] != 3) {
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            if (password_verify($mdp, $user['mdp'])) {
+                $_SESSION["pseudo"] = $user['pseudo']; 
+                header("location:dashboard.php");
             } else {
-                $message .= 'Erreur lors du téléchargement de la photo.<br>';
+                $_SESSION['error'] = "Mot de passe incorrect.";
+                $_SESSION['try']++; 
+                header("location:erreur.php");
             }
         } else {
-            $message .= 'Le fichier n\'est pas une image.<br>';
+            $_SESSION['error'] = "Utilisateur non trouvé.";
+            $_SESSION['try']++; 
+            header("location:erreur.php");
         }
-    }
-
-    $updateQuery = "UPDATE users SET nom=?, prenom=?, mail=? $photoUpdate WHERE pseudo=?";
-    $stmt = $connection->prepare($updateQuery);
-    $stmt->bind_param("ssss", $nom, $prenom, $mail, $pseudo);
-
-    if (!empty($_POST['newPassword']) && !empty($_POST['confirmPassword'])) {
-        if ($_POST['newPassword'] === $_POST['confirmPassword']) {
-            $newPassword = password_hash($_POST['newPassword'], PASSWORD_DEFAULT);
-            $updateQuery = "UPDATE users SET nom=?, prenom=?, mail=?, mdp=? $photoUpdate WHERE pseudo=?";
-            $stmt = $connection->prepare($updateQuery);
-            $stmt->bind_param("sssss", $nom, $prenom, $mail, $newPassword, $pseudo);
-        } else {
-            $message .= 'Les mots de passe ne correspondent pas.<br>';
-        }
-    }
-
-    if (!$message && $stmt->execute()) {
-        $message = 'Votre profil a été mis à jour avec succès.';
     } else {
-        $message .= 'Erreur lors de la mise à jour du profil.';
+        if ($_SESSION['time'] < time()) {
+            $_SESSION['time'] = time() + (15 * 60);
+            $_SESSION['try'] = 0; 
+        } else {
+            $_SESSION['error'] = "Trop de mauvaises tentatives, utilisateur bloqué";
+            header("location:blocage.php");
+        }
     }
+    $stmt->close();
 }
 ?>
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Modifier le profil</title>
+    <title>Connexion</title>
     <?php include 'navbar.php'; ?>
     <link href="style.css" rel="stylesheet">
 </head>
-<body>
+<body class="cyber-theme">
     <div class="container">
-        <h1>Modifier le profil</h1>
-        <?php if ($message): ?>
-            <div class="alert"><?php echo $message; ?></div>
-        <?php endif; ?>
-        <form action="" method="post" enctype="multipart/form-data">
-            Nom: <input type="text" name="nom" value="<?php echo htmlspecialchars($user['nom']); ?>"><br>
-            Prénom: <input type="text" name="prenom" value="<?php echo htmlspecialchars($user['prenom']); ?>"><br>
-            Email: <input type="email" name="mail" value="<?php echo htmlspecialchars($user['mail']); ?>"><br>
-            Nouveau mot de passe: <input type="password" name="newPassword"><br>
-            Confirmer le mot de passe: <input type="password" name="confirmPassword"><br>
-            Photo: <input type="file" name="photo" accept="image/*"><br>
-            <input type="submit" value="Mettre à jour">
-        </form>
-        <?php if (!empty($user['photo'])): ?>
-            <div>
-                <h2>Photo actuelle :</h2>
-                <img src="<?php echo htmlspecialchars($user['photo']); ?>" alt="Photo de profil" style="max-width:200px;">
-            </div>
-        <?php endif; ?>
+        <h1>Connexion</h1>
+        <form action="" method="post">
+            Pseudo*: <input type="text" name="pseudo" required><br><br>
+            Mot de passe*: <input type="password" name="mdp" required><br><br>
+            <input type="submit" value="Valider" name="bouton"><br><br>
+        </form><br><br>
+        <p>Pas encore inscrit? <a href="inscription.php">Inscrivez-vous ici</a>.</p>
     </div>
 </body>
 </html>
